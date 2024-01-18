@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/externalCheckPoint.unity
+    guid: 3b68850146abc1d49934686a150a858b
+  - enabled: 1
+    path: Assets/Scenes/BattleScene.unity
+    guid: 569f05f526fb2b4468b448324374afcb
   m_configObjects: {}

@@ -9,7 +9,8 @@ public class PlayerIncombat : MonoBehaviour
 {
     public Transform playerTrans;
     private BoxCollider2D playerCollider;
-
+    private SpriteRenderer PlayerRender;
+    public bag playerBag;
 
     public int maxHealth;                //设置最大生命值
     int health;
@@ -22,14 +23,20 @@ public class PlayerIncombat : MonoBehaviour
     public float roadUp;                 //设置三路位置  注意要与移动距离同步调整
     public float roadMiddle;
     public float roadDown;
+    
 
     public Image skillCD;
     public float CDtime;
     bool isCD;
 
+    //判断玩家是否可以使用技能的bool值
+    public bool canInvincble;
+    public bool haveWand;
+    public bool CanReBound;
     // Start is called before the first frame update
     void Start()
     {
+        PlayerRender = GetComponent<SpriteRenderer>();
         health = maxHealth;              //初始化生命值
         playerCollider = GetComponent<BoxCollider2D>();
         isInvincible = false;
@@ -39,8 +46,25 @@ public class PlayerIncombat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        print(canInvincble);
         Move();
         Skill();
+        CanInvincble();//无敌函数
+    }
+    private void OnEnable()
+    {
+        //先把道具函数初始化到事件中心
+        eventsystem.Instance.setUpOrAdd("Invincible", PlayerInvincible);//此string变量和道具名字应该相同
+        eventsystem.Instance.setUpOrAdd("wand", PlayerWand);
+        eventsystem.Instance.setUpOrAdd("ReBound", playerReBound);
+        //使场景刷新后在前一个场景已经获取的道具生效
+        for (int i = 0; i < playerBag.items.Count; i++)
+        {
+            if (playerBag.items[i].isGet)
+            {
+                eventsystem.Instance.EventInvoke(playerBag.items[i].Name);
+            }
+        }
     }
 
     void Move()
@@ -95,6 +119,8 @@ public class PlayerIncombat : MonoBehaviour
             return;
         }
         health -= damage;
+        PlayerRender.color = Color.red;//变成红色（测试用）
+        StartCoroutine(turnWaite());
         if (health <= 0)
         {
             Debug.Log("die");
@@ -108,5 +134,33 @@ public class PlayerIncombat : MonoBehaviour
         yield return new WaitForSeconds(invincibleTime);
         isInvincible = false;
     }
-
+    IEnumerator turnWaite()
+    {
+        yield return new WaitForSeconds(0.8f);
+        PlayerRender.color = Color.white;
+    }
+    public void CanInvincble()//按k键就无敌的函数
+    {
+        if (canInvincble)//判断是否可以解锁无敌
+        {
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                isInvincible = true;             //无敌状态开启
+                StartCoroutine(WaitInvincible());//开启协程处理无敌时间
+            }
+        }
+    }    
+    //下面写各个道具bool值的解锁
+    void PlayerInvincible()//玩家无敌
+    {
+       canInvincble = true;
+    }
+    void PlayerWand()//玩家的法杖
+    {
+        haveWand = true;
+    }
+    void playerReBound()//玩家反弹道具
+    {
+        CanReBound = true;
+    }
 }

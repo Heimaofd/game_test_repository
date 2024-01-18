@@ -26,11 +26,23 @@ public class boss : MonoBehaviour
     }
     void ObstacRefresh()
     {
-        randomNum = Random.Range(1,4);
+        randomNum = Random.Range(1, 8);//生成1，2，3，4，5，6，7
         refreshTime -= Time.deltaTime;
         if (refreshTime <= 0 )
         {
-            Instantiate(Obstacle, transform.GetChild(randomNum - 1).transform.position, Quaternion.identity);
+            if(randomNum<=2&&randomNum>=1)//第一行
+            {
+               Instantiate(Obstacle, transform.GetChild(0).transform.position, Quaternion.identity);
+            }
+            
+            if (randomNum <= 5 && randomNum >= 3)//第二行
+            {
+               Instantiate(Obstacle, transform.GetChild(1).transform.position, Quaternion.identity);
+            }
+             if (randomNum >= 6 && randomNum <= 7)//第三行  
+            {
+                Instantiate(Obstacle, transform.GetChild(2).transform.position, Quaternion.identity);
+            }
             refreshTime = startRefreashTime;
         }
     }

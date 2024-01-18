@@ -5,4 +5,5 @@ using UnityEngine;
 public class bag :ScriptableObject
 {
    public List<item> items = new List<item>();
+    public int itemNum;
 }

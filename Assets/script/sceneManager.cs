@@ -14,5 +14,8 @@ public class sceneManager : baseNomonoManager<sceneManager>
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1;
     }
-    
+    public void nextScene()//到下一个场景
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex+1);
+    }
 }
