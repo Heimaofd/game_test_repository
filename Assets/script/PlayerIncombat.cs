@@ -13,7 +13,7 @@ public class PlayerIncombat : MonoBehaviour
     public bag playerBag;
 
     public int maxHealth;                //设置最大生命值
-    int health;
+    public int health;
 
     public float moveTime;               //设置移动时间
     public float moveDistance;           //设置移动距离
@@ -31,8 +31,7 @@ public class PlayerIncombat : MonoBehaviour
     public float CDtime;
    
     bool isCD;
-
-
+    private bool isSkillInvincble;
     //判断玩家是否可以使用技能的bool值
     public bool canInvincble;
     public bool haveWand;
@@ -55,7 +54,7 @@ public class PlayerIncombat : MonoBehaviour
         Move();
         Skill();
         CanInvincble();//无敌函数
-        print(InvincibleCd);
+        
     }
     private void OnEnable()
     {
@@ -125,19 +124,27 @@ public class PlayerIncombat : MonoBehaviour
 
     public void TakeDamage (int damage)  //角色受伤
     {
-        if (isInvincible)                //若处于无敌状态，免除伤害
+        if (isInvincible||isSkillInvincble)                //若处于无敌状态，免除伤害
         {
             return;
         }
-        health -= damage;
-        PlayerRender.color = Color.red;//变成红色（测试用）
-        StartCoroutine(turnWaite());
-        if (health <= 0)
+        if (!isInvincible && !isSkillInvincble)
         {
-            Debug.Log("die");
+            health -= damage;
+            eventsystem.Instance.EventInvoke("playerTakeDamage");//爱心减少
+            Debug.Log("playerTakeDamage");
+            if (PlayerRender.color != Color.green)
+            {
+                PlayerRender.color = Color.red;//变成红色（测试用）
+            }
+            if (health <= 0)
+            {
+                Debug.Log("die");
+            }
+            isInvincible = true;             //无敌状态开启
+            StartCoroutine(WaitInvincible());//开启协程处理无敌时间
         }
-        isInvincible = true;             //无敌状态开启
-        StartCoroutine(WaitInvincible());//开启协程处理无敌时间
+       
     }
 
     IEnumerator WaitInvincible()//受伤无敌
@@ -146,17 +153,7 @@ public class PlayerIncombat : MonoBehaviour
         PlayerRender.color = Color.white;
         isInvincible = false;
     }
-    IEnumerator WaitSkillInvincible()//技能无敌
-    {
-        yield return new WaitForSeconds(skillInvincibleTime);
-        PlayerRender.color = Color.white;
-        isInvincible = false;
-    }
-    IEnumerator turnWaite()
-    {
-        yield return new WaitForSeconds(0.8f);
-        PlayerRender.color = Color.white;
-    }
+  
     public void CanInvincble()//按k键就无敌的函数
     {
         InvincibleCd -= Time.deltaTime;
@@ -165,13 +162,18 @@ public class PlayerIncombat : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.K))
             {
                 PlayerRender.color = Color.green;
-                isInvincible = true;             //无敌状态开启
-                StartCoroutine(WaitSkillInvincible());//开启协程处理无敌时间
+                isSkillInvincble = true;             //无敌状态开启
+                StartCoroutine("WaitSkillInvincible");//开启处理无敌时间
                 InvincibleCd = InvincibleStartCd;
             }
-           
         }
-    }    
+    }
+    IEnumerator WaitSkillInvincible()//技能无敌
+    {
+        yield return new WaitForSeconds(skillInvincibleTime);
+        PlayerRender.color = Color.white;
+        isSkillInvincble = false;
+    }   
     //下面写各个道具bool值的解锁
     void PlayerInvincible()//玩家无敌
     {

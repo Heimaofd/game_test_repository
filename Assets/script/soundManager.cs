@@ -20,7 +20,6 @@ public class soundManager : MonoBehaviour
         audioManager = GetComponent<AudioSource>();
         //在下面从Resources加载各种AudioClip
         jumpSound = Resources.Load<AudioClip>("sound/Saint5");
-        print(jumpSound);
     }
     //在下面写不同音效的不同函数
    static public void jumpingSound()
