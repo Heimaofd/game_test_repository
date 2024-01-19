@@ -11,6 +11,9 @@ public class PlayerIncombat : MonoBehaviour
     private BoxCollider2D playerCollider;
     private SpriteRenderer PlayerRender;
     public bag playerBag;
+    public BoxCollider2D reBoundColli;
+    public GameObject MagicBal;
+    public Transform MagicBallTrans;
 
     public int maxHealth;                //设置最大生命值
     public int health;
@@ -18,7 +21,7 @@ public class PlayerIncombat : MonoBehaviour
     public float moveTime;               //设置移动时间
     public float moveDistance;           //设置移动距离
     public float invincibleTime;         //设置无敌时间
-    bool isInvincible;            //无敌状态
+    private float startInvincibleTime;                                     //
 
     public float roadUp;                 //设置三路位置  注意要与移动距离同步调整
     public float roadMiddle;
@@ -26,24 +29,38 @@ public class PlayerIncombat : MonoBehaviour
 
     public float InvincibleCd;//无敌技能的Cd
     private float InvincibleStartCd;
+    public float reBoundCd;//反弹障碍物CD
+    private float startReBoundCd;
+    public float wandCd;//法杖生成法球cd
+    private float startWandCd;
+    public int WindNum;//一次技能生成法球个数
+   
+
     public float skillInvincibleTime;//无敌多长时间
+    public float reBoundTime;//反弹持续时间
+
     public Image skillCD;
     public float CDtime;
    
     bool isCD;
-    private bool isSkillInvincble;
+    private bool isDamage;
+    private bool isSkillInvincible;
     //判断玩家是否可以使用技能的bool值
     public bool canInvincble;
     public bool haveWand;
     public bool CanReBound;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        startWandCd= wandCd ;
+        wandCd = 0;
+         startReBoundCd=reBoundCd;
+        startInvincibleTime = invincibleTime;
+        invincibleTime = 0;
         PlayerRender = GetComponent<SpriteRenderer>();
         health = maxHealth;              //初始化生命值
         playerCollider = GetComponent<BoxCollider2D>();
-        isInvincible = false;
         isCD = false;
     }
 
@@ -54,7 +71,26 @@ public class PlayerIncombat : MonoBehaviour
         Move();
         Skill();
         CanInvincble();//无敌函数
-        
+        TurnColor();
+         invincibleTime -= Time.deltaTime;//无敌时间减少，由无敌时间判断是否无敌
+        ReBound();
+        wend();
+    }
+    void TurnColor()
+    {
+        if (invincibleTime > 0&& PlayerRender.color != Color.red&& isSkillInvincible)
+        {
+            PlayerRender.color = Color.green;
+        }
+        if (invincibleTime <= 0)
+        {
+            isSkillInvincible = false;
+        }
+        if (!isDamage && invincibleTime <= 0)
+        {
+
+            PlayerRender.color = Color.white;
+        }
     }
     private void OnEnable()
     {
@@ -124,36 +160,30 @@ public class PlayerIncombat : MonoBehaviour
 
     public void TakeDamage (int damage)  //角色受伤
     {
-        if (isInvincible||isSkillInvincble)                //若处于无敌状态，免除伤害
+        if (invincibleTime<=0)                //受到伤害
         {
-            return;
-        }
-        if (!isInvincible && !isSkillInvincble)
-        {
-            health -= damage;
+              health -= damage;
+            isDamage = true;
             eventsystem.Instance.EventInvoke("playerTakeDamage");//爱心减少
             Debug.Log("playerTakeDamage");
             if (PlayerRender.color != Color.green)
             {
                 PlayerRender.color = Color.red;//变成红色（测试用）
+                StartCoroutine("turnWhit");
             }
             if (health <= 0)
             {
                 Debug.Log("die");
             }
-            isInvincible = true;             //无敌状态开启
-            StartCoroutine(WaitInvincible());//开启协程处理无敌时间
-        }
-       
+            invincibleTime = startInvincibleTime;
+        }                 
     }
-
-    IEnumerator WaitInvincible()//受伤无敌
+   IEnumerator turnWhit()
     {
-        yield return new WaitForSeconds(invincibleTime);
+        yield return new WaitForSeconds(0.4f);
         PlayerRender.color = Color.white;
-        isInvincible = false;
+        isDamage = false;
     }
-  
     public void CanInvincble()//按k键就无敌的函数
     {
         InvincibleCd -= Time.deltaTime;
@@ -161,19 +191,52 @@ public class PlayerIncombat : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.K))
             {
-                PlayerRender.color = Color.green;
-                isSkillInvincble = true;             //无敌状态开启
-                StartCoroutine("WaitSkillInvincible");//开启处理无敌时间
+                invincibleTime = skillInvincibleTime;//无敌状态开启   
                 InvincibleCd = InvincibleStartCd;
+                isSkillInvincible = true;
             }
         }
     }
-    IEnumerator WaitSkillInvincible()//技能无敌
+  public void ReBound()//反弹障碍物的函数
     {
-        yield return new WaitForSeconds(skillInvincibleTime);
-        PlayerRender.color = Color.white;
-        isSkillInvincble = false;
-    }   
+        reBoundCd -= Time.deltaTime;
+        if (CanReBound && reBoundCd <= 0)//判断是否可以解锁无敌
+        {
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                print("成功开启技能");
+                reBoundColli.enabled = true;
+                StartCoroutine("deleteColli");
+                reBoundCd = startReBoundCd;
+            }
+        }
+    }
+    public void wend()//生成发球的函数
+    {
+        wandCd -= Time.deltaTime;
+        if (haveWand && wandCd <= 0)//判断是否可以解锁无敌
+        {
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                print("成功开启wind技能");
+                wandCd = startWandCd;
+                StartCoroutine("lunch");
+            }
+        }
+    }
+    IEnumerator lunch()
+    {
+        for (int i = 0; i < WindNum; i++)
+        {
+            yield return new WaitForSeconds(0.2f);
+            Instantiate(MagicBal,MagicBallTrans.position, Quaternion.identity);
+        }
+    }
+    IEnumerator deleteColli()
+    {
+        yield return new WaitForSeconds(reBoundTime);
+        reBoundColli.enabled = false;
+    }
     //下面写各个道具bool值的解锁
     void PlayerInvincible()//玩家无敌
     {

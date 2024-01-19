@@ -13,4 +13,3 @@ MonoBehaviour:
   m_Name: PlayerBag
   m_EditorClassIdentifier: 
   items: []
-  itemNum: 0

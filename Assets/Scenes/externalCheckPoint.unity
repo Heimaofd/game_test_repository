@@ -775,7 +775,9 @@ MonoBehaviour:
   closeSprite: {fileID: 0}
   openSprite: {fileID: 0}
   playerBag: {fileID: 11400000, guid: 8ab765fcc1259f746844854a6ded46ab, type: 2}
-  thisItem: {fileID: 11400000, guid: d8f431dc3741c3545aaf0aefb3dd7796, type: 2}
+  InvincibleItem: {fileID: 11400000, guid: d8f431dc3741c3545aaf0aefb3dd7796, type: 2}
+  wandItem: {fileID: 11400000, guid: 135d71e5fd2926746856aa6723740982, type: 2}
+  reBoundItem: {fileID: 11400000, guid: 16d4c330ff712804b82f562b3e802f45, type: 2}
 --- !u!1 &1259072981
 GameObject:
   m_ObjectHideFlags: 0
