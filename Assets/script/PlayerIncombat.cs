@@ -23,11 +23,15 @@ public class PlayerIncombat : MonoBehaviour
     public float roadUp;                 //设置三路位置  注意要与移动距离同步调整
     public float roadMiddle;
     public float roadDown;
-    
 
+    public float InvincibleCd;//无敌技能的Cd
+    private float InvincibleStartCd;
+    public float skillInvincibleTime;//无敌多长时间
     public Image skillCD;
     public float CDtime;
+   
     bool isCD;
+
 
     //判断玩家是否可以使用技能的bool值
     public bool canInvincble;
@@ -36,6 +40,7 @@ public class PlayerIncombat : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
         PlayerRender = GetComponent<SpriteRenderer>();
         health = maxHealth;              //初始化生命值
         playerCollider = GetComponent<BoxCollider2D>();
@@ -50,6 +55,7 @@ public class PlayerIncombat : MonoBehaviour
         Move();
         Skill();
         CanInvincble();//无敌函数
+        print(InvincibleCd);
     }
     private void OnEnable()
     {
@@ -66,7 +72,10 @@ public class PlayerIncombat : MonoBehaviour
             }
         }
     }
-
+    private void Awake()
+    {
+        InvincibleStartCd = InvincibleCd;
+    }
     void Move()
     {
         if (Input.GetKeyDown(KeyCode.W))//按下按键“W”
@@ -78,6 +87,7 @@ public class PlayerIncombat : MonoBehaviour
             else if (playerTrans.position.y == roadMiddle || playerTrans.position.y == roadDown) //处于中间or下路，移动
             {
                 playerTrans.DOMoveY(moveDistance, moveTime).SetRelative();
+                soundManager.jumpingSound();
             }
             
         }
@@ -90,6 +100,7 @@ public class PlayerIncombat : MonoBehaviour
             else if (playerTrans.position.y == roadMiddle || playerTrans.position.y == roadUp) //处于中间or上路，移动
             {
                 playerTrans.DOMoveY(-moveDistance, moveTime).SetRelative();
+                soundManager.jumpingSound();
             }
         }
     }
@@ -129,9 +140,16 @@ public class PlayerIncombat : MonoBehaviour
         StartCoroutine(WaitInvincible());//开启协程处理无敌时间
     }
 
-    IEnumerator WaitInvincible()
+    IEnumerator WaitInvincible()//受伤无敌
     {
         yield return new WaitForSeconds(invincibleTime);
+        PlayerRender.color = Color.white;
+        isInvincible = false;
+    }
+    IEnumerator WaitSkillInvincible()//技能无敌
+    {
+        yield return new WaitForSeconds(skillInvincibleTime);
+        PlayerRender.color = Color.white;
         isInvincible = false;
     }
     IEnumerator turnWaite()
@@ -141,13 +159,17 @@ public class PlayerIncombat : MonoBehaviour
     }
     public void CanInvincble()//按k键就无敌的函数
     {
-        if (canInvincble)//判断是否可以解锁无敌
+        InvincibleCd -= Time.deltaTime;
+        if (canInvincble && InvincibleCd<=0)//判断是否可以解锁无敌
         {
             if (Input.GetKeyDown(KeyCode.K))
             {
+                PlayerRender.color = Color.green;
                 isInvincible = true;             //无敌状态开启
-                StartCoroutine(WaitInvincible());//开启协程处理无敌时间
+                StartCoroutine(WaitSkillInvincible());//开启协程处理无敌时间
+                InvincibleCd = InvincibleStartCd;
             }
+           
         }
     }    
     //下面写各个道具bool值的解锁
